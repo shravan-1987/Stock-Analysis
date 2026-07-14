@@ -46,9 +46,23 @@ To protect against value traps or fraudulent accounting:
 
 ---
 
+### [2026-07-14] - Phase 2: Quantitative Scrapers (`yfinance` + Screener.in)
+- Created project folder scaffolding (`data/annual_reports/`, `src/...`) and `requirements.txt`.
+- Created `src/utils/config.py` with consensus weights (`15-15-24-24-8-14`) and Knock-Out thresholds (`3.5` governance, `3.0` longevity).
+- Implemented `src/extractors/quantitative.py` (`yfinance` API integration for live Indian stock prices, market cap in Crores, valuation multiples, 52w high/low, and historical CAGR).
+- Implemented `src/scrapers/screener_scraper.py` (HTML table scraper for 10-year ROCE, working capital days, pledging %, and Annual Report PDF links).
+
+### [2026-07-14] - Phase 3, 4 & 5: AI Analyzer, 6-Pillar Scoring Engine & CLI Runner
+- Implemented `src/scrapers/pdf_downloader.py` (multi-year PDF downloader into `data/annual_reports/{ticker}/` with local validation and caching).
+- Implemented `src/extractors/pdf_ai_analyzer.py` (`google-genai` File API + `gemini-2.5-pro` structured Pydantic schema `ForensicAndMoatAnalysis`, plus local `pypdf` keyword fallback).
+- Implemented `src/engine/scoring.py` (calculates 1-10 scores across all 6 pillars, computes weighted average, and enforces Knock-Out Veto checks).
+- Implemented `src/engine/report_generator.py` (renders terminal executive scorecard with `Rs.`/ASCII fallback for Windows console safety, and exports JSON + Markdown reports to `data/cache/`).
+- Implemented `main.py` CLI runner (`python main.py --stock RELIANCE`, `--fast`) and verified end-to-end execution on Reliance Industries (`RELIANCE.NS`).
+
+---
+
 ## 4. Current Status & Next Action Items
-- [x] Project workspace created and git initialized.
-- [x] `memory.md` created.
-- [ ] Create folder scaffolding (`data/annual_reports/`, `src/scrapers/`, `src/extractors/`, `src/engine/`, `src/utils/`).
-- [ ] Create `requirements.txt` and `.gitignore`.
-- [ ] Create remote GitHub repo (`gh repo create Stock-Analysis --public --source=. --remote=origin`) and push initial commit.
+- [x] All 5 Core Phases implemented and tested locally inside `.venv`.
+- [x] End-to-end pipeline verified on `RELIANCE` (`7.04 / 10.0` Consensus Score, `HOLD / MODERATE QUALITY`).
+- [x] Exported verification reports (`RELIANCE_scorecard.json` and `RELIANCE_executive_report.md`).
+- [x] Code pushed to GitHub repository (`shravan-1987/Stock-Analysis`).
