@@ -15,6 +15,7 @@ from src.extractors.quantitative import fetch_yfinance_metrics
 from src.scrapers.screener_scraper import scrape_full_screener_data
 from src.scrapers.pdf_downloader import download_annual_reports_for_ticker
 from src.extractors.pdf_ai_analyzer import analyze_company_annual_reports, analyze_pdf_local_fallback
+from src.scrapers.news_forensic_scraper import scrape_live_news_forensics
 from src.engine.scoring import compute_final_scorecard
 from src.engine.report_generator import render_terminal_scorecard, export_scorecard_files
 
@@ -51,9 +52,13 @@ def run_stock_analysis(ticker: str, fast_mode: bool = False, force_download: boo
             logger.warning("Could not download valid PDF Annual Reports. Using local fallback estimates.")
             ai_data = analyze_pdf_local_fallback(Path("no_reports_dummy.pdf"))
             
+    # 3.5 Run Live News & Regulatory Forensic Scraper (ED/CBI/SEBI/NCLT pre-check)
+    logger.info("Checking live news & regulatory forensic intelligence...")
+    news_forensic = scrape_live_news_forensics(ticker, quant_data.get("company_name", ""))
+            
     # 4. Run Consensus Scoring Engine (15-15-24-24-8-14 + Knock-Out Veto Rule)
     logger.info("Computing 6-Pillar consensus scorecard and checking Knock-Out safety rules...")
-    scorecard = compute_final_scorecard(quant_data, screener_data, ai_data)
+    scorecard = compute_final_scorecard(quant_data, screener_data, ai_data, news_forensic)
     
     # 5. Render to terminal and export JSON/Markdown
     render_terminal_scorecard(scorecard)

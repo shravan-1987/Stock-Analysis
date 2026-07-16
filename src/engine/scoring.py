@@ -88,7 +88,7 @@ def score_pillar_3_moat_and_market_share(ai_data: Dict[str, Any], screener: Dict
     return round(min(10.0, max(0.0, score)), 2), summary
 
 
-def score_pillar_4_governance_and_forensics(ai_data: Dict[str, Any], screener: Dict[str, Any]) -> Tuple[float, str]:
+def score_pillar_4_governance_and_forensics(ai_data: Dict[str, Any], screener: Dict[str, Any], news_forensic: Dict[str, Any] = None) -> Tuple[float, str]:
     """Pillar 4: Management Quality, Governance & Forensics (24% Weight - Highest Priority)"""
     # Start from AI estimated score or clean 9.0
     score = float(ai_data.get("governance_score_out_of_10", 9.0))
@@ -121,17 +121,33 @@ def score_pillar_4_governance_and_forensics(ai_data: Dict[str, Any], screener: D
         score -= 1.0
         reasons.append("Moderate related party transactions noted")
         
+    # Apply Real-Time News & Regulatory Forensic Checks (Live Guardrail)
+    if news_forensic and news_forensic.get("live_governance_penalty", 0.0) > 0:
+        live_pen = float(news_forensic["live_governance_penalty"])
+        risk_level = news_forensic.get("live_regulatory_risk_level", "LOW")
+        
+        if risk_level == "HIGH" or live_pen >= 5.0:
+            score = min(score - live_pen, 1.0)
+            reasons.insert(0, f"LIVE FORENSIC RED FLAG: {news_forensic.get('summary', 'Active regulatory investigations detected')}")
+        else:
+            score -= live_pen
+            reasons.append(f"Live news scrutiny check: {news_forensic.get('summary')} (-{live_pen:.1f} pts)")
+            
     summary = " | ".join(reasons)
     return round(min(10.0, max(0.0, score)), 2), summary
 
 
-def score_pillar_5_longevity_and_survival(ai_data: Dict[str, Any]) -> Tuple[float, str]:
+def score_pillar_5_longevity_and_survival(ai_data: Dict[str, Any], news_forensic: Dict[str, Any] = None) -> Tuple[float, str]:
     """Pillar 5: 10-Year Longevity & Disruption Risk (8% Weight + Knock-Out Check)"""
     score = float(ai_data.get("ten_year_survival_score_out_of_10", 8.5))
     tech_risk = ai_data.get("tech_ai_disruption_risk", "LOW").upper()
     reg_risk = ai_data.get("regulatory_subsidy_dependence", "LOW").upper()
     
-    if tech_risk == "HIGH" or reg_risk == "HIGH":
+    if news_forensic and news_forensic.get("live_regulatory_risk_level") == "HIGH":
+        reg_risk = "HIGH"
+        score = min(score, 4.0)
+        summary = f"High structural disruption and regulatory survival risk due to active investigative/legal overhang (Tech Risk: {tech_risk}, Regulatory Risk: {reg_risk})."
+    elif tech_risk == "HIGH" or reg_risk == "HIGH":
         score = min(score, 4.5)
         summary = f"High structural disruption risk (Tech Risk: {tech_risk}, Regulatory Risk: {reg_risk})."
     else:
@@ -170,16 +186,16 @@ def score_pillar_6_valuation_and_margin_of_safety(quant: Dict[str, Any], screene
     return round(min(10.0, max(0.0, score)), 2), summary
 
 
-def compute_final_scorecard(quant: Dict[str, Any], screener: Dict[str, Any], ai_data: Dict[str, Any]) -> Dict[str, Any]:
+def compute_final_scorecard(quant: Dict[str, Any], screener: Dict[str, Any], ai_data: Dict[str, Any], news_forensic: Dict[str, Any] = None) -> Dict[str, Any]:
     """
     Master Scoring Function: Evaluates all 6 pillars, computes consensus weighted average,
-    and applies the Knock-Out / Veto safety check.
+    and applies the Knock-Out / Veto safety check with real-time news/regulatory guardrails.
     """
     s1, exp1 = score_pillar_1_financial_health(quant, screener)
     s2, exp2 = score_pillar_2_growth_momentum(quant, screener)
     s3, exp3 = score_pillar_3_moat_and_market_share(ai_data, screener)
-    s4, exp4 = score_pillar_4_governance_and_forensics(ai_data, screener)
-    s5, exp5 = score_pillar_5_longevity_and_survival(ai_data)
+    s4, exp4 = score_pillar_4_governance_and_forensics(ai_data, screener, news_forensic)
+    s5, exp5 = score_pillar_5_longevity_and_survival(ai_data, news_forensic)
     s6, exp6 = score_pillar_6_valuation_and_margin_of_safety(quant, screener)
     
     raw_weighted = (

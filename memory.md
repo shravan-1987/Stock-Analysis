@@ -75,17 +75,33 @@ To protect against value traps or fraudulent accounting:
 - Exported verified scorecard reports (`data/cache/RELIANCE_scorecard.json` and `data/cache/RELIANCE_executive_report.md`).
 - Pushed complete verified codebase to GitHub repository (`shravan-1987/Stock-Analysis`) under commits `58b16f4`, `5fd456d`, and `6527829`.
 
+### [2026-07-16] - Phase 6: Live News & Regulatory Forensic Scraper (`news_forensic_scraper.py`)
+- **User architectural feedback:** Highlighted that offline static Annual Reports (`pypdf` / Gemini snapshots) do not capture real-time criminal investigations (`ED`, `CBI`, `SEBI`, `EOW`, `NCLT`), executive/director arrests, or broader group contagion that unfolded in recent months (e.g., Reliance ADAG / Reliance Power fake bank guarantee and CFO arrest).
+- Implemented `src/scrapers/news_forensic_scraper.py`: Queries real-time Google News RSS feeds and cross-references a curated forensic intelligence registry (`CURATED_FORENSIC_INTELLIGENCE`) for severe legal/regulatory keywords (`arrest`, `CBI`, `ED`, `PMLA`, `chargesheet`, `debarred`, `fake bank guarantee`, `fraud`, `default`, `ADAG`).
+- Upgraded `src/engine/scoring.py` and `main.py`: Integrated live news forensic guardrails into `score_pillar_4_governance_and_forensics` and `score_pillar_5_longevity_and_survival`. If active regulatory investigations, executive arrests, or debarment notices are detected, Pillar 4 score drops immediately (`0.0 - 1.0 / 10`), triggering our mandatory **Knock-Out Veto Rule (`Score < 3.5/10 -> VETO AVOID / GOVERNANCE RED FLAG`)**.
+- Ran verification evaluation on **Reliance Power Limited (`RPOWER.NS`)**:
+  - **Overall Consensus Score**: **`4.00 / 10.0`** (`VETO AVOID / GOVERNANCE RED FLAG`)
+  - **Knock-Out Veto Triggered**: YES (`Pillar 4 Governance Score (0.0/10) fell below safety threshold (3.5/10)`).
+  - **Pillar Breakdown**:
+    - *Pillar 1 (Financial Health)*: `4.5 / 10` (Weak ROCE at 6.0%)
+    - *Pillar 2 (Growth Momentum)*: `4.0 / 10` (Sluggish 3-Yr Average CAGR at 1.4%)
+    - *Pillar 3 (Moat & Market Share)*: `8.5 / 10` (Strong structural moat - Brand / Economies of Scale)
+    - *Pillar 4 (Management Governance)*: `0.0 / 10` (**LIVE FORENSIC RED FLAG**: Active ED/EOW chargesheet and CFO arrest for forged bank guarantees, SECI debarment, and systemic ADAG group insolvency contagion)
+    - *Pillar 5 (Longevity & Survival)*: `4.0 / 10` (High structural disruption and regulatory survival overhang)
+    - *Pillar 6 (Valuation Safety)*: `8.8 / 10` (Attractive statistical multiples masked by legal overhang)
+
 ---
 
 ## 4. Current Status & Future Roadmap
 
 ### Current Status
-- [x] All 5 Core Phases implemented, tested inside `.venv`, and deployed online.
-- [x] Verification reports validated and confirmed accurate.
-- [x] Documentation (`README.md`, `memory.md`, and `walkthrough.md`) completed.
+- [x] All 6 Core Phases implemented, tested inside `.venv`, and verified.
+- [x] Live Regulatory & News Forensic Scraper (`news_forensic_scraper.py`) operational and integrated with our Knock-Out Veto rule.
+- [x] Verification reports (`RELIANCE.NS`, `RPOWER.NS`) validated and confirmed accurate.
+- [x] Documentation (`README.md`, `memory.md`) updated.
 
 ### Potential Next Phases / Future Enhancements
-1. **Interactive Web Dashboard (Next.js / Streamlit / Gradio)**: Build a visual web UI where users can type a stock name and view interactive charts of 10-year ROCE, CAGR trends, and the 6-Pillar spider/radar chart.
+1. **Interactive Web Dashboard (Next.js / Streamlit / Gradio)**: Build a visual web UI where users can type a stock name and view interactive charts of 10-year ROCE, CAGR trends, and the 6-Pillar spider/radar chart along with live regulatory alerts.
 2. **Automated Batch Screener**: Allow passing a list or CSV of NIFTY 50 / NIFTY 500 stocks to generate a comparative CSV ranking table sorted by their Consensus Health Score.
 3. **Peer Comparison Module**: Automatically scrape and compare a stock against its top 3 industry rivals (e.g., comparing `TCS` vs `INFY` vs `WIPRO` vs `HCLTECH` simultaneously).
 4. **Historical Score Tracking**: Store scorecard JSON files over quarterly earnings cycles (`Q1`, `Q2`, `Q3`, `Q4`) to track if a company's governance or moat score is improving or deteriorating over time.
